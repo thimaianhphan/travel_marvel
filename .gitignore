@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Packages / distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+*.egg
+
+# Installer / wheel metadata
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Tests / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.pytest_cache/
+.hypothesis/
+
+# Type/checker caches
+.mypy_cache/
+.dmypy.json
+.pyre/
+typings/
+
+# Streamlit
+.streamlit/
+
+# Environment & secrets
+.env
+.env.*
+secrets.json
+*.pem
+*.key
+
+# Databases
+*.sqlite3
+*.db
+*.db-journal
+
+# Logs
+*.log
+
+# Editor directories and OS files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints
+
+# Static / build artifacts
+staticfiles/
+*.manifest
+*.spec
+
+# Misc
+*.so
+*.dylib
+*.dll
+*.exe
+*.pdb
+
+# Cache directory
+.cache/
