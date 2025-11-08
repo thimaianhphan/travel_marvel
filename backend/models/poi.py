@@ -1,5 +1,5 @@
 """
-POI Data Models
+Point of Interest Data Models
 
 Defines the POI data structure and related models.
 """
