@@ -3,30 +3,77 @@ Adapter with OpenStreetMap for POI Discovery
 
 Functions for discovering POIs from OpenStreetMap using the Overpass API.
 """
-import requests
 import logging
-from typing import List, Dict, Tuple, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
+
+import requests
 
 from models.poi import PointOfInterest
-from services.poi.config import OVERPASS_URL, OVERPASS_TIMEOUT
+from services.poi_discovery.config import OVERPASS_TIMEOUT, OVERPASS_URLS
 from utils.helper_functions import calculate_bbox
 
 logger = logging.getLogger(__name__)
 
-def query_overpass(query: str, timeout: int = OVERPASS_TIMEOUT) -> Dict:
-    """Execute an Overpass API query."""
+
+def _is_overpass_available(url: str, timeout: int) -> bool:
     try:
-        response = requests.post(
-            OVERPASS_URL,
-            data=query,
-            headers={"Content-Type": "text/plain"},
-            timeout=timeout
+        heartbeat = requests.get(
+            url,
+            params={"data": "[out:json][timeout:5];node(0,0,0,0);out;"},
+            timeout=min(timeout, 5),
         )
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Overpass API request failed: {e}")
-        raise RuntimeError(f"Failed to query Overpass API: {e}") from e
+        heartbeat.raise_for_status()
+        return True
+    except requests.RequestException:
+        return False
+
+
+def query_overpass(query: str, timeout: int = OVERPASS_TIMEOUT) -> Dict:
+    """Execute an Overpass API query with endpoint rotation and health checks."""
+    last_error: Optional[Exception] = None
+    for idx, url in enumerate(OVERPASS_URLS):
+        if not _is_overpass_available(url, timeout):
+            logger.debug("Skipping Overpass endpoint %s (health check failed)", url)
+            continue
+        try:
+            response = requests.post(
+                url,
+                data=query,
+                headers={"Content-Type": "text/plain"},
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            elements = payload.get("elements", [])
+            if elements:
+                if idx > 0:
+                    logger.info(
+                        "Overpass fallback succeeded on endpoint %s after %d retries",
+                        url,
+                        idx,
+                    )
+                return payload
+            logger.warning(
+                "Overpass endpoint %s returned 0 elements. Trying next endpoint (%d/%d).",
+                url,
+                idx + 1,
+                len(OVERPASS_URLS),
+            )
+            if idx == len(OVERPASS_URLS) - 1:
+                return payload
+        except requests.exceptions.RequestException as exc:
+            last_error = exc
+            logger.warning(
+                "Overpass endpoint %s failed (%s). Trying next endpoint (%d/%d).",
+                url,
+                exc,
+                idx + 1,
+                len(OVERPASS_URLS),
+            )
+    if last_error:
+        logger.error("All Overpass endpoints failed: %s", last_error)
+        raise RuntimeError(f"Failed to query Overpass API: {last_error}") from last_error
+    return {"elements": []}
 
 
 def classify_poi_type(tags: Dict[str, Any]) -> Optional[str]:
