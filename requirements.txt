@@ -4,3 +4,13 @@ rapidfuzz
 sentence-transformers
 faiss-cpu
 numpy
+# environmental variables
+dotenv
+
+# backend
+fastapi
+uvicorn[standard]
+requests
+orjson
+diskcache # for caching
+numpy
