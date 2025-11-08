@@ -1,0 +1,6 @@
+diskcache
+requests
+rapidfuzz
+sentence-transformers
+faiss-cpu
+numpy
