@@ -7,3 +7,4 @@ uvicorn[standard]
 requests
 orjson
 diskcache # for caching
+numpy
