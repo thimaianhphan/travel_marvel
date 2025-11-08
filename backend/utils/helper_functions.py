@@ -3,7 +3,8 @@ Helper functions for backend utilities.
 """
 
 import logging
-from typing import List
+from typing import List, Tuple
+import math
 
 # -------------------------
 # Functions for ORS route handling
@@ -120,3 +121,39 @@ def _stitch_routes(route_segments, max_routes=5):
                 complete_routes.append(stitched)
     
     return complete_routes[:max_routes]
+
+# -------------------------
+# POI helper functions (discovery, scoring, etc.) can be added here
+# -------------------------
+def calculate_bbox(center_lat: float, center_lon: float, radius_km: float) -> Tuple[float, float, float, float]:
+    """
+    Calculate bounding box around a center point.
+    Returns: (min_lat, min_lon, max_lat, max_lon)
+    """
+    # Approximate: 1 degree lat ≈ 111 km, 1 degree lon ≈ 111 km * cos(lat)
+    lat_delta = radius_km / 111.0
+    lon_delta = radius_km / (111.0 * math.cos(math.radians(center_lat)))
+    
+    return (
+        center_lat - lat_delta,
+        center_lon - lon_delta,
+        center_lat + lat_delta,
+        center_lon + lon_delta
+    )
+
+
+def distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculate distance between two points in kilometers (Haversine formula)."""
+    R = 6371.0  # Earth radius in km
+    
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    
+    a = (
+        math.sin(dlat / 2) ** 2 +
+        math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+        math.sin(dlon / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    return R * c
