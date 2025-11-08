@@ -1,3 +1,9 @@
+diskcache
+requests
+rapidfuzz
+sentence-transformers
+faiss-cpu
+numpy
 # environmental variables
 dotenv
 
