@@ -1,6 +1,6 @@
 from typing import Dict, Tuple
 from diskcache import Cache
-from .config import COPERNICUS_EUDEM_WMS, COPERNICUS_TOKEN, USER_AGENT
+from .config import COPERNICUS_EUDEM_WMTS, COPERNICUS_TOKEN, USER_AGENT
 import requests
 
 CACHE = Cache("./.cache/faiss")
@@ -14,15 +14,15 @@ def _http_get(url: str, params: Dict) -> bytes | None:
     return None
 
 def copernicus_relief_boost(lat: float, lon: float) -> float:
-    if not COPERNICUS_EUDEM_WMS: return 0.0
+    if not COPERNICUS_EUDEM_WMTS: return 0.0
     params = {
-        "SERVICE":"WMS","REQUEST":"GetMap","VERSION":"1.3.0","LAYERS":"EUDEM","CRS":"EPSG:4326",
+        "SERVICE":"WMTS","REQUEST":"GetMap","VERSION":"1.3.0","LAYERS":"EUDEM","CRS":"EPSG:4326",
         "BBOX":f"{lat-0.02},{lon-0.02},{lat+0.02},{lon+0.02}","WIDTH":"128","HEIGHT":"128",
         "FORMAT":"image/png","AUTH":COPERNICUS_TOKEN or "",
     }
-    key = ("COP_TILE", COPERNICUS_EUDEM_WMS, tuple(sorted(params.items())))
+    key = ("COP_TILE", COPERNICUS_EUDEM_WMTS, tuple(sorted(params.items())))
     if key in CACHE: return 0.1
-    content = _http_get(COPERNICUS_EUDEM_WMS, params)
+    content = _http_get(COPERNICUS_EUDEM_WMTS, params)
     if content and len(content) > 1000:
         CACHE.set(key, True, expire=7*86400)
         return 0.1
