@@ -10,7 +10,7 @@ load_dotenv()  # Load environment variables from .env
 ORS_BASE = os.getenv('ORS_BASE')
 ORS_KEY = os.getenv('ORS_KEY')
 
-from utils.helper_functions import _decode_polyline, _to_lonlat_list
+from backend.utils.helper_functions import _decode_polyline, _to_lonlat_list
 # -------------------------
 # Route generation via OpenRouteService API
 # -------------------------

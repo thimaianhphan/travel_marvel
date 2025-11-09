@@ -6,12 +6,13 @@ from __future__ import annotations
 
 import logging
 import math
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from sentence_transformers import SentenceTransformer
 
 from .category_mapping import CATEGORY_EQUIV, SUBTYPE_TO_COARSE, matching_buckets
-from .config import EMBED_MODEL_FALLBACK, EMBED_MODEL_PATH
+from .config import EMBED_MODEL_FALLBACK, EMBED_MODEL_PATH, EMBED_MODEL_DEVICE
 from .embedding_index import TextIndex
 from .scenic_boost import scenic_boost
 from .text_features import poi_text
@@ -34,6 +35,18 @@ def _distance_km(a: Tuple[float, float], b: Tuple[float, float]) -> float:
     return 2 * radius * math.asin(math.sqrt(hav))
 
 
+def _resolve_model_path(candidate: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    if not candidate:
+        return None, EMBED_MODEL_FALLBACK
+
+    path_like = candidate.startswith(".") or candidate.startswith("/") or candidate.startswith("\\")
+    if path_like and not Path(candidate).exists():
+        logger.info("Embedding model path %s not found locally; using fallback.", candidate)
+        return None, EMBED_MODEL_FALLBACK
+
+    return candidate, EMBED_MODEL_FALLBACK
+
+
 class SimilarPOIFinder:
     def __init__(
         self,
@@ -45,16 +58,19 @@ class SimilarPOIFinder:
         self.alpha = float(alpha)
         self.radius_km = float(radius_km)
 
+        primary_path, fallback_path = _resolve_model_path(model_path or EMBED_MODEL_PATH)
+
         try:
-            self.model = SentenceTransformer(model_path or EMBED_MODEL_PATH)
+            target = primary_path or fallback_path
+            self.model = SentenceTransformer(target, device=EMBED_MODEL_DEVICE)
         except Exception as exc:
             logger.warning(
                 "Failed to load embedding model from %s (%s). Falling back to %s.",
-                model_path,
+                primary_path or EMBED_MODEL_PATH,
                 exc,
-                EMBED_MODEL_FALLBACK,
+                fallback_path,
             )
-            self.model = SentenceTransformer(EMBED_MODEL_FALLBACK)
+            self.model = SentenceTransformer(fallback_path, device=EMBED_MODEL_DEVICE)
 
         self.user_center: Optional[Tuple[float, float]] = None
         self.index_by_cat: Dict[str, TextIndex] = {}

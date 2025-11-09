@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from services.poi_discovery.config import OVERPASS_URLS
+from backend.services.poi_discovery.config import OVERPASS_URLS
 from .osm import _is_overpass_available
 from .http_cache import cached_post
 

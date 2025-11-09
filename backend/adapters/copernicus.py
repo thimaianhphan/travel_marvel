@@ -8,7 +8,7 @@ from typing import Optional
 
 import requests
 
-from services.alternatives_discovery.config import (
+from backend.services.alternatives_discovery.config import (
     COPERNICUS_EUDEM_WMTS,
     COPERNICUS_TOKEN,
     REQUEST_USER_AGENT,

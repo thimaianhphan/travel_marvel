@@ -7,8 +7,9 @@ from __future__ import annotations
 import logging
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from models.poi import PointOfInterest
-from services.poi_discovery.poi_discovery_service import discover_pois_along_route
+from backend.adapters.ors import ors_route
+from backend.models.poi import PointOfInterest
+from backend.services.poi_discovery.poi_discovery_service import discover_pois_along_route
 
 from .poi_lookup_service import batch_resolve, resolve_one
 from .similar_poi_finder import SimilarPOIFinder
@@ -60,9 +61,30 @@ def discover_local_alternatives(
         raise RuntimeError("Failed to resolve any regional candidate POIs via Nominatim.")
 
     finder = SimilarPOIFinder(radius_km=radius_km)
-    finder.build_index(resolved_candidates, user_center=user_center)
-
-    suggestions = finder.find_similar(resolved_targets, topk_each=topk_each)
+    try:
+        finder.build_index(resolved_candidates, user_center=user_center)
+        suggestions = finder.find_similar(resolved_targets, topk_each=topk_each)
+    except Exception as exc:
+        logger.warning("Similarity search failed (%s). Falling back to heuristic candidate order.", exc)
+        suggestions = []
+        for seed in resolved_targets:
+            trimmed_candidates = resolved_candidates[:topk_each]
+            suggestions.append(
+                {
+                    "query_name": seed["name"],
+                    "query_lonlat": [float(seed.get("lon", 0.0)), float(seed.get("lat", 0.0))],
+                    "results": [
+                        {
+                            "name": cand.get("name"),
+                            "lonlat": [float(cand.get("lon", 0.0)), float(cand.get("lat", 0.0))],
+                            "score": None,
+                            "category": cand.get("category") or "unknown",
+                            "tags": cand.get("tags") or {},
+                        }
+                        for cand in trimmed_candidates
+                    ],
+                }
+            )
 
     output: Dict[str, List[Dict]] = {}
     for seed, suggestion in zip(resolved_targets, suggestions):
@@ -144,6 +166,11 @@ def plan_alternative_routes(
                 "destination": destination,
                 "score": destination.score,
                 "route_pois": route_pois,
+                "route_path": _build_route_path(
+                    user_start=user_start,
+                    waypoints=route_pois,
+                    destination=destination,
+                ),
             }
         )
 
@@ -151,4 +178,44 @@ def plan_alternative_routes(
 
 
 __all__ = ["discover_local_alternatives", "plan_alternative_routes"]
+
+
+def _build_route_path(
+    *,
+    user_start: Tuple[float, float],
+    waypoints: List[PointOfInterest],
+    destination: PointOfInterest,
+) -> List[List[float]]:
+    """
+    Request a routed polyline from ORS. Falls back to straight-line segments if routing fails.
+    Returns coordinates as [lat, lon] pairs.
+    """
+    latlng_points: List[Tuple[float, float]] = [
+        (float(user_start[0]), float(user_start[1])),
+        *[(float(poi.lat), float(poi.lon)) for poi in waypoints],
+        (float(destination.lat), float(destination.lon)),
+    ]
+
+    route_path: List[List[float]] = []
+    profiles = ("driving-car", "foot-walking", "cycling-regular")
+
+    for profile in profiles:
+        try:
+            routes = ors_route(latlng_points, profile=profile, ask_alternatives=1)
+            if routes:
+                route_path = [[coord[1], coord[0]] for coord in routes[0] if len(coord) >= 2]
+                if route_path:
+                    logger.info("ORS returned %d points using profile '%s'", len(route_path), profile)
+                    break
+        except Exception as exc:  # pragma: no cover - network failures
+            logger.warning("ORS routing failed with profile '%s' (%s)", profile, exc)
+
+    if not route_path:
+        logger.warning(
+            "ORS routing unavailable for profiles %s; falling back to direct segments.",
+            ", ".join(profiles),
+        )
+        route_path = [[lat, lon] for lat, lon in latlng_points]
+
+    return route_path
 

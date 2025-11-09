@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
-from adapters.copernicus import relief_is_steep
-from adapters.wikidata import fetch_entity, has_instance, located_in
+from backend.adapters.copernicus import relief_is_steep
+from backend.adapters.wikidata import fetch_entity, has_instance, located_in
 
 
 def is_narrative(text: Optional[str]) -> bool:

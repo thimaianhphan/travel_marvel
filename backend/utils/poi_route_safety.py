@@ -8,7 +8,7 @@ to guarantee routes always go from A to B.
 import logging
 from typing import List, Tuple
 
-from models.poi import PointOfInterest
+from backend.models.poi import PointOfInterest
 from .helper_functions import distance_km
 
 logger = logging.getLogger(__name__)

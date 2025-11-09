@@ -1,3 +1,6 @@
+# -------------------------
+# FastAPI Backend
+# -------------------------
 # Python
 __pycache__/
 *.py[cod]
@@ -39,9 +42,6 @@ htmlcov/
 .pyre/
 typings/
 
-# Streamlit
-.streamlit/
-
 # Environment & secrets
 .env
 .env.*
@@ -82,3 +82,10 @@ staticfiles/
 
 # Cache directory
 .cache/
+
+# AI models
+ai_models/
+# -------------------------
+# Next.js Frontend
+# -------------------------
+# The frontend/.gitignore file handles this part

@@ -7,19 +7,19 @@ Orchestrates POI discovery from multiple sources and applies route safety filter
 import logging
 from typing import List, Optional
 
-from models.poi import PointOfInterest
-from adapters.osm import discover_osm_pois
-from utils.poi_route_safety import (
+from backend.models.poi import PointOfInterest
+from backend.adapters.osm import discover_osm_pois
+from backend.utils.poi_route_safety import (
     estimate_route_detour_km,
     deduplicate_pois,
     filter_progressive_pois,
     point_to_line_distance_km
 )
-from utils.helper_functions import distance_km
+from backend.utils.helper_functions import distance_km
 
 # Import ORS POIs (primary reliable source)
 try:
-    from adapters.ors import discover_ors_pois
+    from backend.adapters.ors import discover_ors_pois
     ORS_POIS_AVAILABLE = True
 except ImportError:
     ORS_POIS_AVAILABLE = False

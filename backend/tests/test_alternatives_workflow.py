@@ -18,11 +18,11 @@ import sys
 from pathlib import Path
 
 # Ensure backend modules resolve when executed directly
-BACKEND_ROOT = Path(__file__).resolve().parents[1]
-if str(BACKEND_ROOT) not in sys.path:
-    sys.path.insert(0, str(BACKEND_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-from services.alternatives_discovery import plan_alternative_routes  # noqa: E402
+from backend.services.alternatives_discovery import plan_alternative_routes  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 

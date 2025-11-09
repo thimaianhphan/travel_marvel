@@ -8,7 +8,7 @@ numpy
 dotenv
 
 # backend
-fastapi
+fastapi[standard]
 uvicorn[standard]
 requests
 orjson
