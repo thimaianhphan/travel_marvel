@@ -15,7 +15,7 @@ from typing import Any, Dict, Iterable, Optional, Tuple
 import requests
 from diskcache import Cache
 
-from services.alternatives_discovery.config import (
+from backend.services.alternatives_discovery.config import (
     CACHE_ROOT,
     DEFAULT_REQUEST_DELAY,
     DEFAULT_REQUEST_TIMEOUT,

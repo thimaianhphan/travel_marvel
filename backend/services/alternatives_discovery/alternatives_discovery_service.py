@@ -7,8 +7,8 @@ from __future__ import annotations
 import logging
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from models.poi import PointOfInterest
-from services.poi_discovery.poi_discovery_service import discover_pois_along_route
+from backend.models.poi import PointOfInterest
+from backend.services.poi_discovery.poi_discovery_service import discover_pois_along_route
 
 from .poi_lookup_service import batch_resolve, resolve_one
 from .similar_poi_finder import SimilarPOIFinder

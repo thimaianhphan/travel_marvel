@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from adapters.copernicus import relief_is_steep
+from backend.adapters.copernicus import relief_is_steep
 
 
 def scenic_boost(poi: Dict) -> float:

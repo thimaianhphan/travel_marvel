@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from adapters.nominatim import best_match
-from adapters.osm_details import fetch_tags
+from backend.adapters.nominatim import best_match
+from backend.adapters.osm_details import fetch_tags
 
 from .lookup_category import infer_category
 from .scenic_descriptions import generate_scenic_description, is_narrative

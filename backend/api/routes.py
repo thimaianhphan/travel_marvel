@@ -4,9 +4,9 @@ from dataclasses import asdict
 from typing import Dict, List, Tuple
 
 from fastapi import APIRouter, HTTPException
-from models.poi import PointOfInterest
-from services.alternatives_discovery import plan_alternative_routes
-from models.alternative import AlternativePoi, AlternativeRoute, AlternativesRequest, AlternativesResponse, DEFAULT_TARGET, DEFAULT_REGIONAL_CANDIDATES
+from backend.models.poi import PointOfInterest
+from backend.services.alternatives_discovery import plan_alternative_routes
+from backend.models.alternative import AlternativePoi, AlternativeRoute, AlternativesRequest, AlternativesResponse
 
 router = APIRouter()
 

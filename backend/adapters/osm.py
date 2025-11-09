@@ -8,9 +8,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
-from models.poi import PointOfInterest
-from services.poi_discovery.config import OVERPASS_TIMEOUT, OVERPASS_URLS
-from utils.helper_functions import calculate_bbox
+from backend.models.poi import PointOfInterest
+from backend.services.poi_discovery.config import OVERPASS_TIMEOUT, OVERPASS_URLS
+from backend.utils.helper_functions import calculate_bbox
 
 logger = logging.getLogger(__name__)
 

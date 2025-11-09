@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from services.alternatives_discovery.config import NOMINATIM_SEARCH_URL
+from backend.services.alternatives_discovery.config import NOMINATIM_SEARCH_URL
 from .http_cache import cached_get
 
 
