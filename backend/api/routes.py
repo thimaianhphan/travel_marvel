@@ -18,8 +18,8 @@ from backend.services.alternatives_discovery import plan_alternative_routes, res
 router = APIRouter()
 
 
-LOCAL_CANDIDATE_RADIUS_KM = 80.0
-LOCAL_CANDIDATE_LIMIT = 40
+LOCAL_CANDIDATE_RADIUS_KM = 120.0
+LOCAL_CANDIDATE_LIMIT = 60
 
 # --- temporary stub until the video-analysis teammate plugs in ---
 DEFAULT_TARGET = {"name": "Neuschwanstein Castle", "hint": "castle"}
@@ -110,12 +110,32 @@ def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
         candidate_pool = manual_candidate_seeds + auto_candidates
 
         if not candidate_pool:
+            auto_candidates = _collect_local_candidate_names(
+                payload.user_lat,
+                payload.user_lon,
+                exclude={resolved_target["name"]},
+                radius_km=LOCAL_CANDIDATE_RADIUS_KM,
+                limit=LOCAL_CANDIDATE_LIMIT,
+            )
+            candidate_pool = auto_candidates
+
+        if not candidate_pool:
             raise HTTPException(
                 status_code=502,
                 detail="Unable to assemble local alternatives – try a different area or add manual suggestions.",
             )
     else:
         target, candidate_pool = _mock_extract_attractions(payload.video_url or "")
+
+    if not manual_places:
+        auto_candidates = _collect_local_candidate_names(
+            payload.user_lat,
+            payload.user_lon,
+            exclude={target["name"]},
+            radius_km=LOCAL_CANDIDATE_RADIUS_KM,
+            limit=LOCAL_CANDIDATE_LIMIT,
+        )
+        candidate_pool = auto_candidates or candidate_pool
 
     try:
         raw_result = plan_alternative_routes(
