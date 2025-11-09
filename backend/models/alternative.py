@@ -26,6 +26,12 @@ class AlternativesRequest(BaseModel):
         description="Optional list of manually provided destinations. The first entry is treated as the viral target; subsequent entries act as seed alternatives.",
         example=["Neuschwanstein Castle", "Heidelberg Castle"],
     )
+    search_radius_km: Optional[float] = Field(
+        default=None,
+        gt=0,
+        description="Optional override for the automatic search radius (in kilometers).",
+        example=120.0,
+    )
 
 
 class AlternativePoi(BaseModel):

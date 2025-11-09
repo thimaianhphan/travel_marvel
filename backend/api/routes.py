@@ -85,6 +85,9 @@ def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
     if not manual_places and not payload.video_url:
         raise HTTPException(status_code=400, detail="Provide either a video_url or manual_places.")
 
+    search_radius = payload.search_radius_km or LOCAL_CANDIDATE_RADIUS_KM
+    poi_search_radius = max(10.0, min(search_radius, 150.0))
+
     if manual_places:
         target_name = manual_places[0]
         resolved_target = resolve_one(target_name)
@@ -106,6 +109,8 @@ def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
             payload.user_lat,
             payload.user_lon,
             exclude={resolved_target["name"], *manual_places[1:]},
+            radius_km=search_radius,
+            limit=LOCAL_CANDIDATE_LIMIT,
         )
         candidate_pool = manual_candidate_seeds + auto_candidates
 
@@ -114,7 +119,7 @@ def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
                 payload.user_lat,
                 payload.user_lon,
                 exclude={resolved_target["name"]},
-                radius_km=LOCAL_CANDIDATE_RADIUS_KM,
+                radius_km=search_radius,
                 limit=LOCAL_CANDIDATE_LIMIT,
             )
             candidate_pool = auto_candidates
@@ -132,7 +137,7 @@ def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
             payload.user_lat,
             payload.user_lon,
             exclude={target["name"]},
-            radius_km=LOCAL_CANDIDATE_RADIUS_KM,
+            radius_km=search_radius,
             limit=LOCAL_CANDIDATE_LIMIT,
         )
         candidate_pool = auto_candidates or candidate_pool
@@ -142,10 +147,10 @@ def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
             user_start=(payload.user_lat, payload.user_lon),
             target_poi=target,
             regional_candidates=candidate_pool,
-            radius_km=200,
+            radius_km=max(200.0, search_radius),
             topk_each=payload.max_alternatives,
             poi_discovery_kwargs={
-                "search_radius_km": 40,
+                "search_radius_km": poi_search_radius,
                 "max_pois": 3,
                 "prioritize_scenic": True,
             },
