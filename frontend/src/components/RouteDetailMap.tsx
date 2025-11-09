@@ -29,6 +29,8 @@ const Tooltip = dynamic(
 import "leaflet/dist/leaflet.css";
 import type { Icon } from "leaflet";
 
+const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
 type RouteDetailMapProps = {
   originLat: number;
   originLon: number;
@@ -64,6 +66,14 @@ const DEFAULT_ICON_SIZE: [number, number] = [32, 32];
 const DEFAULT_ICON_ANCHOR: [number, number] = [16, 32];
 
 const formatPoiType = (type: string) => type.replace(/_/g, " ");
+
+const buildStaticMapImageUrl = (lat: number, lon: number, zoom = 13) => {
+  if (!MAPBOX_ACCESS_TOKEN) return null;
+  const formattedLat = lat.toFixed(5);
+  const formattedLon = lon.toFixed(5);
+  const pinColor = "10b981";
+  return `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+${pinColor}(${formattedLon},${formattedLat})/${formattedLon},${formattedLat},${zoom},0/400x260@2x?access_token=${MAPBOX_ACCESS_TOKEN}`;
+};
 
 const extractImageUrl = (tags?: Record<string, unknown>): string | null => {
   if (!tags) return null;
@@ -192,7 +202,7 @@ export function RouteDetailMap({ originLat, originLon, route }: RouteDetailMapPr
       icon: icons.waypoint,
       score: entry.poi.score ?? null,
       tags: entry.poi.tags,
-      imageUrl: extractImageUrl(entry.poi.tags),
+      imageUrl: extractImageUrl(entry.poi.tags) ?? buildStaticMapImageUrl(entry.coords[0], entry.coords[1]),
       description: extractDescription(entry.poi.tags),
     }));
 
@@ -209,7 +219,9 @@ export function RouteDetailMap({ originLat, originLon, route }: RouteDetailMapPr
       score: route.score ?? route.destination.score ?? null,
       tags: route.destination.tags,
       isDestination: true,
-      imageUrl: extractImageUrl(route.destination.tags),
+      imageUrl:
+        extractImageUrl(route.destination.tags) ??
+        buildStaticMapImageUrl(destination[0], destination[1]),
       description: extractDescription(route.destination.tags),
     };
 
@@ -258,7 +270,7 @@ export function RouteDetailMap({ originLat, originLon, route }: RouteDetailMapPr
 
   if (!icons) {
     return (
-      <div className="flex h-full w-full items-center justify-center rounded-3xl border border-emerald-500/30 bg-slate-900 text-sm text-emerald-200/70">
+      <div className="flex h-full w-full items-center justify-center rounded-3xl border border-emerald-200 bg-white text-sm text-slate-500">
         Loading map…
       </div>
     );
@@ -299,8 +311,30 @@ export function RouteDetailMap({ originLat, originLon, route }: RouteDetailMapPr
               click: () => setSelectedMarker(marker),
             }}
           >
-            <Tooltip direction="top" offset={[0, -24]} opacity={0.9}>
-              {marker.name}
+            <Tooltip direction="top" offset={[0, -24]} opacity={0.95}>
+              <div className="min-w-[160px] max-w-xs space-y-2 rounded-2xl bg-white/95 p-3 text-left shadow-lg shadow-emerald-100">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-600/90">
+                    {marker.isDestination ? "Destination" : "Waypoint"}
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">{marker.name}</p>
+                  <p className="text-[11px] text-slate-600">{formatPoiType(marker.type)}</p>
+                </div>
+                {marker.imageUrl ? (
+                  <div className="overflow-hidden rounded-xl border border-emerald-100">
+                    <img
+                      src={marker.imageUrl}
+                      alt={marker.name}
+                      className="h-24 w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-20 items-center justify-center rounded-xl border border-dashed border-emerald-200 bg-emerald-50 text-[11px] text-emerald-600">
+                    No image available
+                  </div>
+                )}
+              </div>
             </Tooltip>
           </Marker>
         ))}
@@ -308,19 +342,19 @@ export function RouteDetailMap({ originLat, originLon, route }: RouteDetailMapPr
 
       {selectedMarker && (
         <div className="pointer-events-none absolute inset-0 flex items-end justify-start p-4">
-          <div className="pointer-events-auto w-full max-w-sm rounded-3xl border border-emerald-500/40 bg-slate-900/95 shadow-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.25)]">
-            <div className="flex items-start justify-between gap-4 border-b border-emerald-500/20 px-5 py-4">
+          <div className="pointer-events-auto w-full max-w-sm rounded-3xl border border-emerald-200 bg-white shadow-[0_20px_60px_rgba(16,185,129,0.12)]">
+            <div className="flex items-start justify-between gap-4 border-b border-emerald-100 px-5 py-4">
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-300/80">
+                <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-600/80">
                   {selectedMarker.isDestination ? "Destination" : "Waypoint"}
                 </p>
-                <h4 className="text-lg font-semibold text-emerald-50">{selectedMarker.name}</h4>
-                <p className="text-xs text-emerald-300/70">{formatPoiType(selectedMarker.type)}</p>
+                <h4 className="text-lg font-semibold text-slate-900">{selectedMarker.name}</h4>
+                <p className="text-xs text-slate-600">{formatPoiType(selectedMarker.type)}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedMarker(null)}
-                className="rounded-full border border-emerald-500/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100 transition hover:bg-emerald-500/20"
+                className="rounded-full border border-emerald-200 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600 transition hover:bg-emerald-50"
               >
                 Close
               </button>
@@ -330,27 +364,27 @@ export function RouteDetailMap({ originLat, originLon, route }: RouteDetailMapPr
                 <img
                   src={selectedMarker.imageUrl}
                   alt={selectedMarker.name}
-                  className="h-36 w-full rounded-2xl object-cover"
+                  className="h-36 w-full rounded-2xl object-cover shadow-inner shadow-emerald-50"
                 />
               ) : (
-                <div className="flex h-36 w-full items-center justify-center rounded-2xl bg-slate-800/80 text-sm text-emerald-200/70">
+                <div className="flex h-36 w-full items-center justify-center rounded-2xl bg-emerald-50 text-sm text-emerald-700">
                   No image found
                 </div>
               )}
               {selectedMarker.description && (
-                <p className="text-sm leading-relaxed text-emerald-100/80">{selectedMarker.description}</p>
+                <p className="text-sm leading-relaxed text-slate-700">{selectedMarker.description}</p>
               )}
-              <dl className="grid grid-cols-2 gap-4 text-xs text-emerald-200/80">
+              <dl className="grid grid-cols-2 gap-4 text-xs text-slate-600">
                 <div>
-                  <dt className="font-semibold uppercase tracking-[0.3em] text-emerald-300/80">Coordinates</dt>
-                  <dd className="mt-1 font-mono text-sm text-emerald-100">
+                  <dt className="font-semibold uppercase tracking-[0.3em] text-emerald-600">Coordinates</dt>
+                  <dd className="mt-1 font-mono text-sm text-slate-800">
                     {selectedMarker.coords[0].toFixed(4)}, {selectedMarker.coords[1].toFixed(4)}
                   </dd>
                 </div>
                 {selectedMarker.score !== null && (
                   <div>
-                    <dt className="font-semibold uppercase tracking-[0.3em] text-emerald-300/80">Score</dt>
-                    <dd className="mt-1 text-sm text-emerald-100">{selectedMarker.score.toFixed(2)}</dd>
+                    <dt className="font-semibold uppercase tracking-[0.3em] text-emerald-600">Score</dt>
+                    <dd className="mt-1 text-sm text-slate-800">{selectedMarker.score.toFixed(2)}</dd>
                   </div>
                 )}
               </dl>

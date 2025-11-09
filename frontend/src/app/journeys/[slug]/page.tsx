@@ -40,37 +40,37 @@ export default async function JourneyDetailPage({ params }: JourneyPageProps) {
   return (
     <div className="mx-auto max-w-5xl px-6 py-16 md:py-24">
       <Breadcrumbs journey={definedJourney} />
-      <header className="mt-6 overflow-hidden rounded-[3rem] bg-gradient-to-br from-emerald-500 via-emerald-700 to-emerald-900 p-10 text-emerald-50 shadow-xl shadow-emerald-500/30">
+      <header className="mt-6 overflow-hidden rounded-[3rem] bg-gradient-to-br from-emerald-100 via-emerald-50 to-white p-10 text-slate-900 shadow-xl shadow-emerald-100/50">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl space-y-4">
-            <span className="inline-flex rounded-full border border-emerald-200/60 bg-emerald-900/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-emerald-200">
+            <span className="inline-flex rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-emerald-700">
               {definedJourney.season} • {definedJourney.durationDays} days
             </span>
             <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
               {definedJourney.title}
             </h1>
-            <p className="text-lg text-emerald-50/90">{definedJourney.summary}</p>
+            <p className="text-lg text-slate-600">{definedJourney.summary}</p>
           </div>
-          <div className="rounded-3xl bg-emerald-900/40 p-6 text-sm text-emerald-100/90">
-            <p className="font-semibold uppercase tracking-[0.3em] text-emerald-200">
+          <div className="rounded-3xl bg-white/80 p-6 text-sm text-slate-700 shadow-inner shadow-emerald-50">
+            <p className="font-semibold uppercase tracking-[0.3em] text-emerald-700">
               Journey stats
             </p>
             <ul className="mt-4 space-y-3">
               <li>
-                <span className="text-emerald-50/80">Total distance</span>{" "}
-                <span className="font-semibold text-white">
+                <span className="text-slate-500">Total distance</span>{" "}
+                <span className="font-semibold text-slate-900">
                   {definedJourney.distanceKm} km
                 </span>
               </li>
               <li>
-                <span className="text-emerald-50/80">CO₂ saved</span>{" "}
-                <span className="font-semibold text-white">
+                <span className="text-slate-500">CO₂ saved</span>{" "}
+                <span className="font-semibold text-slate-900">
                   {definedJourney.carbonSavedKg} kg
                 </span>
               </li>
               <li>
-                <span className="text-emerald-50/80">Home base</span>{" "}
-                <span className="font-semibold text-white">
+                <span className="text-slate-500">Home base</span>{" "}
+                <span className="font-semibold text-slate-900">
                   {definedJourney.userHomeBase}
                 </span>
               </li>

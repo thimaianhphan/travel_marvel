@@ -49,3 +49,21 @@ To run the FastAPI application locally, use the following command (from the proj
 fastapi dev backend/app.py
 
 ```
+
+2. Frontend
+
+Install dependencies and start the client from the `frontend` directory:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Map thumbnails now use Mapbox Static Images. Create a `.env.local` file in `frontend/` with your token:
+
+```
+NEXT_PUBLIC_MAPBOX_TOKEN=pk.your-token-here
+```
+
+Without the token, thumbnails fall back to a simple placeholder.

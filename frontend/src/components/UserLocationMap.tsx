@@ -35,7 +35,7 @@ export function UserLocationMap({
 
   return (
     <div className="space-y-4 text-left">
-      <div className="h-72 w-full overflow-hidden rounded-3xl border border-emerald-500/30 bg-slate-900/40 shadow-[0_0_40px_rgba(16,185,129,0.08)]">
+      <div className="h-72 w-full overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-[0_20px_60px_rgba(16,185,129,0.08)]">
         <LeafletMapInner
           lat={lat}
           lon={lon}
@@ -45,7 +45,7 @@ export function UserLocationMap({
       </div>
 
       <div className="space-y-2">
-        <div className="flex flex-col gap-1 text-sm text-emerald-200/80 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-1 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
           <p>
             Location: {lat.toFixed(4)}, {lon.toFixed(4)}
           </p>
@@ -64,7 +64,7 @@ export function UserLocationMap({
             />
           </div>
         )}
-        <p className="text-xs text-emerald-300/60">
+        <p className="text-xs text-slate-500">
           Tap on the map to reposition. Wider circles explore more places but can take a little longer to compute.
         </p>
       </div>

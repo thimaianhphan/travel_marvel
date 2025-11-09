@@ -108,7 +108,7 @@ export function VideoUrlCapture({
     : helperText;
 
   return (
-    <div className="w-full rounded-3xl border border-emerald-500/40 bg-slate-900/60 p-6 shadow-[0_0_40px_rgba(16,185,129,0.1)]">
+    <div className="w-full rounded-3xl border border-emerald-200 bg-white p-6 shadow-[0_20px_60px_rgba(16,185,129,0.12)]">
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
           {modes.map(({ key, label }) => (
@@ -121,8 +121,8 @@ export function VideoUrlCapture({
               }}
               className={`flex-1 rounded-xl border px-4 py-2 text-sm font-semibold transition ${
                 mode === key
-                  ? "border-emerald-400/80 bg-emerald-500/10 text-emerald-300"
-                  : "border-emerald-500/20 bg-slate-900 text-emerald-200 hover:border-emerald-400/40"
+                  ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm"
+                  : "border-emerald-200 bg-white text-slate-600 hover:border-emerald-300"
               }`}
             >
               {label}
@@ -133,7 +133,7 @@ export function VideoUrlCapture({
         <form className="flex flex-col gap-4 md:flex-row md:items-center" onSubmit={handleSubmit}>
           <label
             htmlFor="alternatives-input"
-            className="text-sm font-semibold uppercase tracking-[0.4em] text-emerald-300/80"
+            className="text-sm font-semibold uppercase tracking-[0.4em] text-emerald-600/80"
           >
             {showManual ? "Destinations" : "Viral video URL"}
           </label>
@@ -144,7 +144,7 @@ export function VideoUrlCapture({
                 placeholder="Neuschwanstein Castle, Heidelberg Castle"
                 value={manualInput}
                 onChange={(event) => setManualInput(event.target.value)}
-                className="w-full rounded-xl border border-emerald-500/30 bg-slate-900 px-4 py-3 text-sm text-emerald-50 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/30"
+                className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
                 rows={3}
               />
             ) : (
@@ -154,13 +154,13 @@ export function VideoUrlCapture({
                 placeholder={placeholder}
                 value={videoUrl}
                 onChange={(event) => setVideoUrl(event.target.value)}
-                className="w-full rounded-xl border border-emerald-500/30 bg-slate-900 px-4 py-3 text-sm text-emerald-50 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/30"
+                className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
               />
             )}
             <button
               type="submit"
               disabled={loading}
-              className="h-full rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-emerald-700/50"
+              className="h-full rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-emerald-200 disabled:text-emerald-700"
             >
               {loading ? "Generating…" : "Find Alternatives"}
             </button>
@@ -168,17 +168,17 @@ export function VideoUrlCapture({
         </form>
       </div>
 
-      <p className="mt-4 text-sm text-emerald-200/80">{dynamicHelperText}</p>
-      <p className="mt-1 text-xs text-emerald-300/60">
+      <p className="mt-4 text-sm text-slate-600">{dynamicHelperText}</p>
+      <p className="mt-1 text-xs text-slate-500">
         Current search radius: {Math.round(searchRadiusKm)} km. Larger areas may take a little longer to process.
       </p>
       {error && (
-        <p className="mt-2 text-sm text-rose-400">
+        <p className="mt-2 text-sm text-rose-500">
           {error}
         </p>
       )}
       {lastResponse && (
-        <p className="mt-2 text-xs text-emerald-300/60">
+        <p className="mt-2 text-xs text-slate-500">
           Found {lastResponse.alternatives.length} alternative options for “{lastResponse.target_name}”.
         </p>
       )}

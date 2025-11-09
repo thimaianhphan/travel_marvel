@@ -19,16 +19,16 @@ export default function Home() {
   const [searchRadiusKm, setSearchRadiusKm] = useState(DEFAULT_RADIUS_KM);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 py-16 text-emerald-50">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-emerald-50 via-white to-white px-6 py-16 text-slate-900">
       <div className="w-full max-w-4xl space-y-12 text-center">
         <div className="space-y-4">
-          <span className="inline-block text-xs font-semibold uppercase tracking-[0.6em] text-emerald-300/80">
+          <span className="inline-block text-xs font-semibold uppercase tracking-[0.6em] text-emerald-600/70">
             Homie
           </span>
-          <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
+          <h1 className="text-4xl font-semibold leading-tight text-slate-900 md:text-5xl">
             Local travel beyond the crowd.
           </h1>
-          <p className="mx-auto max-w-2xl text-sm text-emerald-200/70">
+          <p className="mx-auto max-w-2xl text-sm text-slate-600">
             Paste a viral trip or type the places on your mind. Homie surfaces alternate destinations nearby so you can explore with fewer crowds and more local flavour.
           </p>
         </div>
@@ -57,14 +57,14 @@ export default function Home() {
           </div>
         )}
 
-        <p className="pt-16 text-xs text-emerald-400/70">
-          <Link href="/imprint" className="hover:text-emerald-200">
+        <p className="pt-16 text-xs text-slate-500">
+          <Link href="/imprint" className="hover:text-emerald-600">
             Imprint
           </Link>
           <span className="px-2" aria-hidden>
             •
           </span>
-          <Link href="/privacy" className="hover:text-emerald-200">
+          <Link href="/privacy" className="hover:text-emerald-600">
             Privacy
           </Link>
         </p>
