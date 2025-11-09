@@ -33,9 +33,38 @@ def _alnum_key(s: str) -> str:
     s = re.sub(r"^(the|a|an|der|die|das|den|dem|ein|eine)\s+", "", s)
     return re.sub(r"[^a-z0-9]+", "", s)
 
+# Treat commemorative tails as variants of the same core place
+_COMM_TAILS = {
+    "memorial", "denkmal", "mahnmal", "gedenkstätte", "gedenkstatte", "monument"
+}
+
+def _core_key(s: str) -> str:
+    """
+    Canonical key that removes trailing commemorative descriptors so that
+    'Berlin Wall Memorial' and 'Berlin Wall' share the same core.
+    Does NOT strip structural POI words like 'Gate', 'Bridge', etc.
+    """
+    norm = _norm(s).lower()
+    # strip leading determiners (mirror _alnum_key)
+    norm = re.sub(r"^(the|a|an|der|die|das|den|dem|ein|eine)\s+", "", norm)
+    toks = re.split(r"[^a-z0-9]+", norm)
+    toks = [t for t in toks if t]
+
+    if not toks:
+        return ""
+
+    # If last token is a commemorative tail, drop it
+    if toks and toks[-1] in _COMM_TAILS:
+        toks = toks[:-1]
+
+    # Return compact alnum core
+    return "".join(toks)
+
+def _strip_leading_det_display(s: str) -> str:
+    return re.sub(r"^(?:the|a|an|der|die|das|den|dem|ein|eine)\s+", "", s, flags=re.I)
+
 def _is_mostly_letters(name: str) -> bool:
     return bool(re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ0-9'’\-\s\.]+", name))
-
 
 # ==================================
 # Timestamp timeline (Shorts) parser
@@ -44,7 +73,6 @@ TS_LINE = re.compile(
     r"(?:^|\s)(?P<ts>\d{1,2}:\d{2})(?:\s*[-–—:]\s*|\s+)(?P<label>[A-ZÄÖÜ][^\n,.;:]+)",
     flags=re.UNICODE
 )
-
 
 # =======================================================
 # Regex fallback for capitalized multiword POI candidates
@@ -60,7 +88,6 @@ CAPITAL_PHRASE = re.compile(
     r")\b",
     flags=re.UNICODE
 )
-
 
 # ===============================
 # Cleaning / de-noising
@@ -115,7 +142,7 @@ KEYWORD_HINT_RULES: List[Tuple[str, str]] = [
     (r"\bbrücke\b|\bbrucke\b|\bbridge\b", "bridge"),
     (r"\baltstadt\b|old town|historic center", "old town"),
     (r"\bplatz\b|\bmarktplatz\b|\bmarkt\b|\bsquare\b", "square"),
-    (r"\bturm\b|\btower\b", "tower"),
+    (r"\b(?:\w*turm|tower)\b", "tower"),
     (r"\bmarkt\b|\bmarket\b|\bbazaar\b|\bsouk\b", "market"),
     (r"\bkanal\b|\bcanal\b", "canal"),
     (r"\bgarten\b|\bgarden\b", "garden"),
@@ -213,7 +240,7 @@ def _load_spacy_or_ruler():
             nlp = spacy.blank("de")
         except Exception:
             nlp = spacy.blank("en")
-        ruler = nlp.add_pipe("entity_ruler")
+        ruler = nlp.add_pipe("entity_ruler", config={"phrase_matcher_attr": "LOWER"})
         patterns = []
         # Seed with common geo tokens to bias recognition
         tokens = [
@@ -224,7 +251,7 @@ def _load_spacy_or_ruler():
             "kathedrale","kirche","münster","munster","basilika","platz","marktplatz",
             "markt","allee","straße","strasse","brücke","brucke","altstadt","museum","galerie",
             "lake","river","harbor","harbour","marina","bridge","cathedral","church",
-            "castle","palace","ruins","square","market","garden","viewpoint", "Fernsehturm",
+            "castle","palace","ruins","square","market","garden","viewpoint", "Fernsehturm", "fernsehturm",
         ]
         for kw in tokens:
             patterns.append({"label": "LOC", "pattern": kw})
@@ -303,16 +330,46 @@ class POIExtractor:
     
     # ---- dedupe + keep first occurrence ----
     def _dedupe_keep_order(self, items: List[Tuple[str, int]]) -> List[str]:
-        seen = set(); out: List[str] = []
+        # Keep first occurrence order, but collapse 'core' variants and prefer the longer/more specific name.
+        seen_alnum = {}   # alnum_key -> index in out
+        seen_core  = {}   # core_key  -> index in out
+        out: List[str] = []
+
         for name, _ in sorted(items, key=lambda x: x[1]):  # by first appearance
-            key = _alnum_key(name)
-            if key in seen:
+            k_alnum = _alnum_key(name)
+            if not k_alnum:
                 continue
-            seen.add(key)
+            k_core  = _core_key(name)
+
+            # Already seen exact (alnum) -> skip
+            if k_alnum in seen_alnum:
+                continue
+
+            # If a core variant exists, decide whether to replace with the more specific (longer) one
+            if k_core and k_core in seen_core:
+                j = seen_core[k_core]
+                cur = out[j]
+                # prefer the longer string as "more specific"
+                if len(name) > len(cur):
+                    out[j] = name
+                    # update alnum map for the replaced entry
+                    seen_alnum[_alnum_key(cur)] = j  # keep old alnum occupied
+                    seen_alnum[k_alnum] = j         # and map new alnum too
+                # else: keep existing, drop this
+                continue
+
+            # New entry
+            idx = len(out)
             out.append(name)
+            seen_alnum[k_alnum] = idx
+            if k_core:
+                seen_core[k_core] = idx
+
             if len(out) >= self.max_results:
                 break
+
         return out
+
 
     # ---- optional ZSL to refine; we will still filter generic labels ----
     _ZSL_LABEL_TO_HINT = {
@@ -412,5 +469,5 @@ class POIExtractor:
                 continue
             seen.add(key)
             out.append({"name": nm, "hint": h})
-
+        
         return out
