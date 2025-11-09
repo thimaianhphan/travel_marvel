@@ -48,6 +48,7 @@ class AlternativeRoute(BaseModel):
     destination: AlternativePoi
     scenic_waypoints: List[AlternativePoi]
     score: Optional[float] = None
+    route_path: List[List[float]] = Field(default_factory=list)
 
 
 class AlternativesResponse(BaseModel):

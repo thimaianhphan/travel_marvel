@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from backend.adapters.ors import ors_route
 from backend.models.poi import PointOfInterest
 from backend.services.poi_discovery.poi_discovery_service import discover_pois_along_route
 
@@ -165,6 +166,11 @@ def plan_alternative_routes(
                 "destination": destination,
                 "score": destination.score,
                 "route_pois": route_pois,
+                "route_path": _build_route_path(
+                    user_start=user_start,
+                    waypoints=route_pois,
+                    destination=destination,
+                ),
             }
         )
 
@@ -172,4 +178,35 @@ def plan_alternative_routes(
 
 
 __all__ = ["discover_local_alternatives", "plan_alternative_routes"]
+
+
+def _build_route_path(
+    *,
+    user_start: Tuple[float, float],
+    waypoints: List[PointOfInterest],
+    destination: PointOfInterest,
+) -> List[List[float]]:
+    """
+    Request a routed polyline from ORS. Falls back to straight-line segments if routing fails.
+    Returns coordinates as [lat, lon] pairs.
+    """
+    latlng_points: List[Tuple[float, float]] = [
+        (float(user_start[0]), float(user_start[1])),
+        *[(float(poi.lat), float(poi.lon)) for poi in waypoints],
+        (float(destination.lat), float(destination.lon)),
+    ]
+
+    route_path: List[List[float]] = []
+    try:
+        routes = ors_route(latlng_points, profile="driving-car", ask_alternatives=1)
+        if routes:
+            # ORS returns [lon, lat]; convert to [lat, lon]
+            route_path = [[coord[1], coord[0]] for coord in routes[0] if len(coord) >= 2]
+    except Exception as exc:  # pragma: no cover - network failures
+        logger.warning("ORS routing failed; falling back to direct segments (%s)", exc)
+
+    if not route_path:
+        route_path = [[lat, lon] for lat, lon in latlng_points]
+
+    return route_path
 

@@ -169,6 +169,7 @@ def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
                 destination=destination,
                 scenic_waypoints=scenic_waypoints,
                 score=entry.get("score"),
+                route_path=entry.get("route_path") or [],
             )
         )
 
