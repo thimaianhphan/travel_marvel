@@ -197,15 +197,24 @@ def _build_route_path(
     ]
 
     route_path: List[List[float]] = []
-    try:
-        routes = ors_route(latlng_points, profile="driving-car", ask_alternatives=1)
-        if routes:
-            # ORS returns [lon, lat]; convert to [lat, lon]
-            route_path = [[coord[1], coord[0]] for coord in routes[0] if len(coord) >= 2]
-    except Exception as exc:  # pragma: no cover - network failures
-        logger.warning("ORS routing failed; falling back to direct segments (%s)", exc)
+    profiles = ("driving-car", "foot-walking", "cycling-regular")
+
+    for profile in profiles:
+        try:
+            routes = ors_route(latlng_points, profile=profile, ask_alternatives=1)
+            if routes:
+                route_path = [[coord[1], coord[0]] for coord in routes[0] if len(coord) >= 2]
+                if route_path:
+                    logger.info("ORS returned %d points using profile '%s'", len(route_path), profile)
+                    break
+        except Exception as exc:  # pragma: no cover - network failures
+            logger.warning("ORS routing failed with profile '%s' (%s)", profile, exc)
 
     if not route_path:
+        logger.warning(
+            "ORS routing unavailable for profiles %s; falling back to direct segments.",
+            ", ".join(profiles),
+        )
         route_path = [[lat, lon] for lat, lon in latlng_points]
 
     return route_path
