@@ -60,9 +60,30 @@ def discover_local_alternatives(
         raise RuntimeError("Failed to resolve any regional candidate POIs via Nominatim.")
 
     finder = SimilarPOIFinder(radius_km=radius_km)
-    finder.build_index(resolved_candidates, user_center=user_center)
-
-    suggestions = finder.find_similar(resolved_targets, topk_each=topk_each)
+    try:
+        finder.build_index(resolved_candidates, user_center=user_center)
+        suggestions = finder.find_similar(resolved_targets, topk_each=topk_each)
+    except Exception as exc:
+        logger.warning("Similarity search failed (%s). Falling back to heuristic candidate order.", exc)
+        suggestions = []
+        for seed in resolved_targets:
+            trimmed_candidates = resolved_candidates[:topk_each]
+            suggestions.append(
+                {
+                    "query_name": seed["name"],
+                    "query_lonlat": [float(seed.get("lon", 0.0)), float(seed.get("lat", 0.0))],
+                    "results": [
+                        {
+                            "name": cand.get("name"),
+                            "lonlat": [float(cand.get("lon", 0.0)), float(cand.get("lat", 0.0))],
+                            "score": None,
+                            "category": cand.get("category") or "unknown",
+                            "tags": cand.get("tags") or {},
+                        }
+                        for cand in trimmed_candidates
+                    ],
+                }
+            )
 
     output: Dict[str, List[Dict]] = {}
     for seed, suggestion in zip(resolved_targets, suggestions):
