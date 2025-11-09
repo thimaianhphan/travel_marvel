@@ -83,6 +83,8 @@ staticfiles/
 # Cache directory
 .cache/
 
+# AI models
+ai_models/
 # -------------------------
 # Next.js Frontend
 # -------------------------
