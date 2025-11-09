@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Travel Marvel | Sustainable Routes Reimagined",
+  title: "Homie | Local travel beyond the crowd",
   description:
-    "Explore Baden-Württemberg through community-powered paths inspired by viral travel videos, remixed for local, low-carbon adventures.",
+    "Homie helps you remix popular destinations into nearby alternatives for quieter, more local adventures anywhere in the world.",
 };
 
 export default function RootLayout({
@@ -28,13 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-emerald-50 via-white to-emerald-100/40 text-slate-900 dark:bg-slate-950 dark:text-emerald-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-emerald-50`}
       >
-        <div className="flex min-h-screen flex-col">
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <SiteFooter />
-        </div>
+        {children}
       </body>
     </html>
   );
