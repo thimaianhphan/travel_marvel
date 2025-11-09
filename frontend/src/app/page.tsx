@@ -53,7 +53,7 @@ export default function Home() {
 
         {alternatives && (
           <div className="pt-12">
-            <AlternativesResults data={alternatives} />
+            <AlternativesResults data={alternatives} originLat={userLat} originLon={userLon} />
           </div>
         )}
 

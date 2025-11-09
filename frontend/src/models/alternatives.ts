@@ -12,6 +12,7 @@ export type AlternativeRoute = {
   destination: AlternativePoi;
   scenic_waypoints: AlternativePoi[];
   score: number | null;
+  route_path: [number, number][];
 };
 
 export type AlternativesResponse = {
