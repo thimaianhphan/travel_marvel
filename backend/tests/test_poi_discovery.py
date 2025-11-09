@@ -5,7 +5,7 @@ import logging
 # Add backend directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from services.poi.poi_discovery_service import discover_pois_along_route
+from services.poi_discovery.poi_discovery_service import discover_pois_along_route
 
 # Configure logging to see the debug output
 logging.basicConfig(level=logging.INFO)

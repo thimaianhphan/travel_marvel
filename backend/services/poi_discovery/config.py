@@ -4,9 +4,16 @@ POI Discovery Configuration
 Centralized configuration for POI discovery services.
 """
 
-# Overpass API endpoint (public instance)
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-# Alternative: "https://overpass.kumi.systems/api/interpreter"
+# Overpass API endpoints (rotate between local + public instances)
+OVERPASS_URLS = [
+    "http://localhost/api/interpreter",  # optional self-hosted instance
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.openstreetmap.ru/api/interpreter",
+]
+
+# Backwards compatibility constant (primary endpoint)
+OVERPASS_URL = OVERPASS_URLS[0]
 
 # Nominatim API (for reverse geocoding if needed)
 NOMINATIM_URL = "https://nominatim.openstreetmap.org"
