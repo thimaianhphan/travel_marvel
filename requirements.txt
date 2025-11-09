@@ -8,3 +8,22 @@ requests
 orjson
 diskcache # for caching
 numpy
+
+## audio_processing
+yt-dlp==2025.9.26
+webrtcvad
+transformers>=4.44
+
+## transcriber
+soundfile
+noisereduce
+faster-whisper
+tqdm
+librosa
+pydub
+
+## models
+### youtube_processor
+typing-extensions>=4.12
+torch>=2.3
+spacy>=3.7
