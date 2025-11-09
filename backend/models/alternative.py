@@ -2,12 +2,14 @@
 Models for alternatives discovery.
 """
 
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Dict, Any, Optional, List
+
 
 class AlternativesRequest(BaseModel):
-    video_url: str = Field(
-        ...,
+    video_url: Optional[str] = Field(
+        None,
         example="https://youtube.com/shorts/hotspot123",
         description="URL of the viral travel video.",
     )
@@ -19,6 +21,12 @@ class AlternativesRequest(BaseModel):
         le=5,
         description="How many alternative destinations to keep.",
     )
+    manual_places: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of manually provided destinations. The first entry is treated as the viral target; subsequent entries act as seed alternatives.",
+        example=["Neuschwanstein Castle", "Heidelberg Castle"],
+    )
+
 
 class AlternativePoi(BaseModel):
     name: str
@@ -28,6 +36,7 @@ class AlternativePoi(BaseModel):
     source: str
     score: Optional[float] = None
     tags: Dict[str, Any] = {}
+
 
 class AlternativeRoute(BaseModel):
     destination: AlternativePoi

@@ -1,15 +1,25 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
 from fastapi import APIRouter, HTTPException
+
+from backend.adapters.osm import discover_osm_pois
+from backend.models.alternative import (
+    AlternativePoi,
+    AlternativeRoute,
+    AlternativesRequest,
+    AlternativesResponse,
+)
 from backend.models.poi import PointOfInterest
-from backend.services.alternatives_discovery import plan_alternative_routes
-from backend.models.alternative import AlternativePoi, AlternativeRoute, AlternativesRequest, AlternativesResponse
+from backend.services.alternatives_discovery import plan_alternative_routes, resolve_one
 
 router = APIRouter()
 
+
+LOCAL_CANDIDATE_RADIUS_KM = 80.0
+LOCAL_CANDIDATE_LIMIT = 40
 
 # --- temporary stub until the video-analysis teammate plugs in ---
 DEFAULT_TARGET = {"name": "Neuschwanstein Castle", "hint": "castle"}
@@ -41,9 +51,71 @@ def _serialize_poi(poi: PointOfInterest) -> AlternativePoi:
     )
 
 
+def _collect_local_candidate_names(
+    lat: float,
+    lon: float,
+    exclude: Set[str],
+    *,
+    radius_km: float = LOCAL_CANDIDATE_RADIUS_KM,
+    limit: int = LOCAL_CANDIDATE_LIMIT,
+) -> List[Dict[str, str]]:
+    pois = discover_osm_pois(lat, lon, radius_km=radius_km, limit=limit * 3)
+    candidates: List[Dict[str, str]] = []
+    seen = {name.lower() for name in exclude}
+
+    for poi in pois:
+        name = (poi.name or "").strip()
+        if not name:
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        candidates.append({"name": name, "hint": poi.poi_type})
+        if len(candidates) >= limit:
+            break
+
+    return candidates
+
+
 @router.post("/alternatives", response_model=AlternativesResponse)
 def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
-    target, candidate_pool = _mock_extract_attractions(payload.video_url)
+    manual_places = [place.strip() for place in (payload.manual_places or []) if place and place.strip()]
+
+    if not manual_places and not payload.video_url:
+        raise HTTPException(status_code=400, detail="Provide either a video_url or manual_places.")
+
+    if manual_places:
+        target_name = manual_places[0]
+        resolved_target = resolve_one(target_name)
+        if not resolved_target:
+            raise HTTPException(status_code=404, detail=f"Could not resolve destination '{target_name}'.")
+
+        target = {
+            "name": resolved_target["name"],
+            "hint": resolved_target.get("category"),
+        }
+
+        manual_candidate_seeds = [
+            {"name": entry}
+            for entry in manual_places[1:]
+            if entry.lower() != resolved_target["name"].lower()
+        ]
+
+        auto_candidates = _collect_local_candidate_names(
+            payload.user_lat,
+            payload.user_lon,
+            exclude={resolved_target["name"], *manual_places[1:]},
+        )
+        candidate_pool = manual_candidate_seeds + auto_candidates
+
+        if not candidate_pool:
+            raise HTTPException(
+                status_code=502,
+                detail="Unable to assemble local alternatives – try a different area or add manual suggestions.",
+            )
+    else:
+        target, candidate_pool = _mock_extract_attractions(payload.video_url or "")
 
     try:
         raw_result = plan_alternative_routes(
@@ -76,7 +148,7 @@ def generate_alternatives(payload: AlternativesRequest) -> AlternativesResponse:
         )
 
     return AlternativesResponse(
-        video_url=payload.video_url,
+        video_url=payload.video_url or manual_places[0],
         target_name=target_name,
         alternatives=serialised,
     )
