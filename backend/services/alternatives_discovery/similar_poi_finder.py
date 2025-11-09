@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Tuple
 from sentence_transformers import SentenceTransformer
 
 from .category_mapping import CATEGORY_EQUIV, SUBTYPE_TO_COARSE, matching_buckets
-from .config import EMBED_MODEL_FALLBACK, EMBED_MODEL_PATH
+from .config import EMBED_MODEL_FALLBACK, EMBED_MODEL_PATH, EMBED_MODEL_DEVICE
 from .embedding_index import TextIndex
 from .scenic_boost import scenic_boost
 from .text_features import poi_text
@@ -62,7 +62,7 @@ class SimilarPOIFinder:
 
         try:
             target = primary_path or fallback_path
-            self.model = SentenceTransformer(target)
+            self.model = SentenceTransformer(target, device=EMBED_MODEL_DEVICE)
         except Exception as exc:
             logger.warning(
                 "Failed to load embedding model from %s (%s). Falling back to %s.",
@@ -70,7 +70,7 @@ class SimilarPOIFinder:
                 exc,
                 fallback_path,
             )
-            self.model = SentenceTransformer(fallback_path)
+            self.model = SentenceTransformer(fallback_path, device=EMBED_MODEL_DEVICE)
 
         self.user_center: Optional[Tuple[float, float]] = None
         self.index_by_cat: Dict[str, TextIndex] = {}

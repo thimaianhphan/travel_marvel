@@ -7,9 +7,22 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+try:
+    import torch
+except Exception:  # pragma: no cover - torch should be installed, but stay defensive
+    torch = None
+
+
+def _default_embed_device() -> str:
+    if torch is not None and torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
+
 # Embedding model configuration
 EMBED_MODEL_PATH = os.getenv("EMBED_MODEL_PATH", "./models/e5-small-v2")
 EMBED_MODEL_FALLBACK = os.getenv("EMBED_MODEL_FALLBACK", "intfloat/e5-small-v2")
+EMBED_MODEL_DEVICE = os.getenv("EMBED_MODEL_DEVICE", _default_embed_device())
 
 # Cache directory root (shared by HTTP + embedding caches)
 CACHE_ROOT = Path(os.getenv("TRAVEL_MARVEL_CACHE_DIR", "./.cache")).resolve()
@@ -43,6 +56,7 @@ DEFAULT_REQUEST_DELAY = float(os.getenv("TRAVEL_MARVEL_REQUEST_DELAY", "1.0"))
 __all__ = [
     "EMBED_MODEL_PATH",
     "EMBED_MODEL_FALLBACK",
+    "EMBED_MODEL_DEVICE",
     "CACHE_ROOT",
     "FAISS_CACHE_DIR",
     "REQUEST_USER_AGENT",

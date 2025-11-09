@@ -4,6 +4,8 @@ Name-based POI resolver using Nominatim + Overpass enrichment.
 
 from __future__ import annotations
 
+import os
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 
 from backend.adapters.nominatim import best_match
@@ -50,7 +52,17 @@ def resolve_one(name: str, hint: Optional[str] = None) -> Optional[Dict]:
 
 
 def batch_resolve(pois: List[Dict]) -> List[Optional[Dict]]:
-    return [resolve_one(poi["name"], hint=poi.get("hint")) for poi in pois]
+    if not pois:
+        return []
+
+    max_workers = int(os.getenv("TRAVEL_MARVEL_RESOLVE_WORKERS", "4"))
+    worker_count = max(1, min(len(pois), max_workers))
+
+    if worker_count == 1:
+        return [resolve_one(poi["name"], hint=poi.get("hint")) for poi in pois]
+
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        return list(executor.map(lambda entry: resolve_one(entry["name"], hint=entry.get("hint")), pois))
 
 
 __all__ = ["resolve_one", "batch_resolve"]
